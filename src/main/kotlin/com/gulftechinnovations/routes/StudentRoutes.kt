@@ -1,10 +1,6 @@
 package com.gulftechinnovations.routes
 
-import com.google.cloud.storage.Blob
-import com.google.cloud.storage.BlobId
-import com.google.cloud.storage.BlobInfo
-import com.google.cloud.storage.Storage
-import com.google.cloud.storage.StorageOptions
+import com.google.cloud.storage.*
 import com.gulftechinnovations.model.Student
 import com.gulftechinnovations.service.StudentService
 import io.ktor.http.*
@@ -14,10 +10,7 @@ import io.ktor.server.config.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
 import kotlin.coroutines.coroutineContext
@@ -26,7 +19,7 @@ fun Routing.studentRoutes(
     studentService: StudentService,
     config: ApplicationConfig,
 ) {
-    val applicationId = config.property("gcp.projectName").getString()
+    val projectId = config.property("gcp.projectName").getString()
     val bucketName = config.property("gcp.storageBucketName").getString()
 
 
@@ -67,7 +60,7 @@ fun Routing.studentRoutes(
                             fileName = part.originalFileName as String
                             val inputStream = part.streamProvider()
                             result = uploadAnObjectToGoogleCloudStorageAsInputStream(
-                                projectId = applicationId,
+                                projectId = projectId,
                                 bucketName = bucketName,
                                 objectName = fileName,
                                 inputStream = inputStream
@@ -84,13 +77,44 @@ fun Routing.studentRoutes(
             }
         }
 
+        post ("/uploadImage"){
+            try {
+                var fileName: String
+                val multipartDart = call.receiveMultipart()
+                var result = ""
+
+                multipartDart.forEachPart { part ->
+
+                    when (part) {
+
+                        is PartData.FileItem -> {
+                            fileName = part.originalFileName as String
+                            val byteArray = part.streamProvider().readBytes()
+                            result = uploadAnObjectToGoogleCloudStorageAsByteArray(
+                                projectId = projectId,
+                                bucketName = bucketName,
+                                objectName = fileName,
+                                byteArray = byteArray
+                            )
+                        }
+
+                        else -> {}
+                    }
+                    part.dispose()
+                }
+                call.respondText(result)
+            }catch (e: Exception) {
+                call.respond(status = HttpStatusCode.BadRequest, e.message ?: "There have some problem")
+            }
+        }
+
 
 
         get("/downloadAnImage/{filename}") {
             try {
                 val fileName = call.parameters["filename"] ?: throw Exception("File name is empty")
                 val result = downloadObjectAsBytes(
-                    projectId = applicationId,
+                    projectId = projectId,
                     bucketName = bucketName,
                     objectName = fileName
                 )
@@ -109,7 +133,7 @@ fun Routing.studentRoutes(
             try {
                 val objectName = call.parameters["imageName"] ?: throw Exception("File name is empty")
                 val result = deleteAnImage(
-                    projectId = applicationId,
+                    projectId = projectId,
                     bucketName = bucketName,
                     objectName = objectName,
                 )
@@ -177,7 +201,7 @@ suspend fun uploadAnObjectToGoogleCloudStorageAsByteArray(
         val blob = storage.create(blobInfo, byteArray,preCondition)
 
 
-        blob.blobId.toGsUtilUri()
+        blob.name
     }
 
 }

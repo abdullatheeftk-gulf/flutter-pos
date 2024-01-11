@@ -1,9 +1,10 @@
 package com.gulftechinnovations.database
 
-import com.gulftechinnovations.database.tables.StudentTable
+import com.gulftechinnovations.database.tables.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+
 
 object DatabaseFactory {
 
@@ -17,8 +18,28 @@ object DatabaseFactory {
 
         transaction(database) {
             SchemaUtils.create(
-                StudentTable
+                StudentTable,
+                UserTable,
+                AdminUserTable,
+                CategoryTable,
+                SubCategoryTable,
+                ProductTable,
+                MultiProductTable,
+                CategoryProductTable,
+                CartTable,
+                CartProductTable,
             )
+            /*SchemaUtils.drop(
+                UserTable,
+                AdminUserTable,
+                CategoryTable,
+                SubCategoryTable,
+                ProductTable,
+                MultiProductTable,
+                CategoryProductTable,
+                CartTable,
+                CartProductTable,
+            )*/
         }
     }
 }

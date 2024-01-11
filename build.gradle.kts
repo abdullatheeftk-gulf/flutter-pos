@@ -36,6 +36,10 @@ configure<AppEngineAppYamlExtension> {
 
 repositories {
     mavenCentral()
+    maven {
+        name = "clojars.org"
+        url = uri("https://repo.clojars.org")
+    }
 }
 
 dependencies {
@@ -62,6 +66,22 @@ dependencies {
     // for gcloud mysql
     implementation("com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.13.1")
 
-
+    // Cloud storage
     implementation("com.google.cloud:google-cloud-storage:2.26.1")
+
+    // ktor Client version
+    implementation("io.ktor:ktor-client-core:$ktor_version")
+    implementation("io.ktor:ktor-client-okhttp:$ktor_version")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+
+
+    // Translation
+    implementation ("net.clojars.suuft:libretranslate-java:1.0.5")
+
+    // Detect language
+    implementation("com.detectlanguage:detectlanguage:1.1.0")
+
+    // DeepL Translation
+    implementation("com.deepl.api:deepl-java:1.4.0")
 }
