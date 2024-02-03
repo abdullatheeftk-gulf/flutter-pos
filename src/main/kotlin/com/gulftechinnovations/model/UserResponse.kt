@@ -3,7 +3,7 @@ package com.gulftechinnovations.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class User(
-    val userId: Int = 0,
-    val userPassword: String
+data class UserResponse(
+    val user:User,
+    val token:String
 )

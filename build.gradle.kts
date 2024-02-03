@@ -6,6 +6,8 @@ val logback_version: String by project
 val exposed_version: String by project
 val mysql_version: String by project
 
+val postgres_version: String by project
+
 plugins {
     kotlin("jvm") version "1.9.21"
     id("io.ktor.plugin") version "2.3.5"
@@ -63,6 +65,9 @@ dependencies {
     //mysql
     implementation("mysql:mysql-connector-java:$mysql_version")
 
+    // postgres
+    implementation("org.postgresql:postgresql:$postgres_version")
+
     // for gcloud mysql
     implementation("com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.13.1")
 
@@ -84,4 +89,10 @@ dependencies {
 
     // DeepL Translation
     implementation("com.deepl.api:deepl-java:1.4.0")
+
+    // Log4J
+    implementation("org.apache.logging.log4j:log4j-api-kotlin:1.4.0")
+
+    // Google cloud translation
+    implementation("com.google.cloud:google-cloud-translate:2.33.0")
 }

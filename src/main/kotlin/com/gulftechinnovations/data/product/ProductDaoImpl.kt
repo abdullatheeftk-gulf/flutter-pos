@@ -2,10 +2,13 @@ package com.gulftechinnovations.data.product
 
 
 import com.gulftechinnovations.database.dbQuery
+import com.gulftechinnovations.database.resultRowToCategory
 import com.gulftechinnovations.database.resultRowToCategoryProduct
 import com.gulftechinnovations.database.resultRowToProduct
 import com.gulftechinnovations.database.tables.CategoryProductTable
+import com.gulftechinnovations.database.tables.CategoryTable
 import com.gulftechinnovations.database.tables.ProductTable
+import com.gulftechinnovations.model.Category
 import com.gulftechinnovations.model.Product
 import io.ktor.server.plugins.*
 import org.jetbrains.exposed.dao.id.EntityID
@@ -125,8 +128,15 @@ class ProductDaoImpl : ProductDao {
                 it[productTaxInPercentage] = product.productTaxInPercentage
                 it[noOfTimesOrdered] = product.noOfTimesOrdered
                 it[info] = product.info
-
             }
+            CategoryProductTable.deleteWhere { CategoryProductTable.productId eq product.productId }
+            product.categories.forEach {categoryId->
+                CategoryProductTable.insert {
+                    it[this.categoryId] = categoryId
+                    it[this.productId] = product.productId
+                }
+            }
+
         }
     }
 
@@ -143,15 +153,16 @@ class ProductDaoImpl : ProductDao {
 
     override suspend fun updateAProductPhoto(
         productId:Int,
-        productName:String
+        productName:String?
     ){
         dbQuery {
-
             ProductTable.update ({ ProductTable.id eq productId }){
                 it[productImage] = productName
             }
         }
     }
+
+
 
     override suspend fun deleteAProduct(productId: Int) {
         dbQuery {
@@ -159,6 +170,18 @@ class ProductDaoImpl : ProductDao {
                 ProductTable.id eq productId
             }
         }
+    }
+
+    override suspend fun getAProductCategories(productId: Int):List<Category> {
+       return  dbQuery {
+           CategoryProductTable.select { CategoryProductTable.productId eq productId }.map {
+               val categoryProduct = CategoryProductTable.resultRowToCategoryProduct(it)
+               val  categoryId = categoryProduct.categoryId
+               CategoryTable.select { CategoryTable.id eq categoryId }.map {resultRow->
+                   CategoryTable.resultRowToCategory(resultRow)
+               }.single()
+           }
+       }
     }
 
 

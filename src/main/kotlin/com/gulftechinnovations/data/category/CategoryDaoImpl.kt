@@ -22,16 +22,17 @@ class CategoryDaoImpl:CategoryDao {
     }
 
     override suspend fun getOneCategoryById(categoryId: Int): Category? {
+
         return dbQuery {
-            CategoryTable.select { CategoryTable.id eq categoryId }
-        }.map {
-            CategoryTable.resultRowToCategory(it)
-        }.singleOrNull()
+            CategoryTable.select(where = CategoryTable.id eq  categoryId).map {
+                CategoryTable.resultRowToCategory(it)
+            }.singleOrNull()
+        }
     }
 
     override suspend fun getOneCategoryByName(categoryName: String): Category? {
         return dbQuery {
-            CategoryTable.select { CategoryTable.categoryName eq categoryName }.map {
+            CategoryTable.select { CategoryTable.categoryName like  "%$categoryName%" }.map {
                 CategoryTable.resultRowToCategory(it)
             }.singleOrNull()
         }
@@ -65,7 +66,7 @@ class CategoryDaoImpl:CategoryDao {
             }
         }else{
             return dbQuery {
-                CategoryTable.selectAll().map {
+                CategoryTable.selectAll().orderBy(Pair(first = CategoryTable.id, second = SortOrder.ASC)).map {
                     CategoryTable.resultRowToCategory(it)
                 }
             }
@@ -76,7 +77,7 @@ class CategoryDaoImpl:CategoryDao {
     override suspend fun updateACategory(category: Category):Int {
         return dbQuery {
              CategoryTable.update({
-                UserTable.id eq category.categoryId
+                CategoryTable.id eq category.categoryId
             }) {
                 it[id] = category.categoryId
                 it[categoryName] = category.categoryName

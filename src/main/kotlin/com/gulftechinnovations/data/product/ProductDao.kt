@@ -1,6 +1,7 @@
 package com.gulftechinnovations.data.product
 
 import com.gulftechinnovations.database.tables.ProductTable
+import com.gulftechinnovations.model.Category
 import com.gulftechinnovations.model.Product
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Column
@@ -47,10 +48,14 @@ interface ProductDao {
 
     suspend fun updateAProductPhoto(
         productId:Int,
-        productName:String
+        productName:String?
     )
 
+
+
     suspend fun deleteAProduct(productId: Int)
+
+    suspend fun getAProductCategories(productId:Int):List<Category>
 
 
 }

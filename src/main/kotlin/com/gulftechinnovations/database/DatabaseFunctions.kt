@@ -16,8 +16,7 @@ fun StudentTable.rowToStudent(row: ResultRow) = Student(
 )
 
 fun UserTable.resultRowToUser(row: ResultRow) = User(
-    userId = row[this.id].value,
-    userName = row[this.userName],
+    userId = row[id].value,
     userPassword = row[this.userPassword]
 )
 
@@ -29,9 +28,9 @@ fun AdminUserTable.resultRowToAdminUser(row: ResultRow) = AdminUser(
 )
 
 fun CategoryTable.resultRowToCategory(row: ResultRow)= Category(
-    categoryId = row[this.id].value,
-    categoryName = row[this.categoryName],
-    noOfTimesOrdered = row[this.noOfTimesOrdered],
+    categoryId = row[id].value,
+    categoryName = row[categoryName],
+    noOfTimesOrdered = row[noOfTimesOrdered],
 )
 
 fun SubCategoryTable.resultRowToSubCategory(row: ResultRow)= SubCategory(

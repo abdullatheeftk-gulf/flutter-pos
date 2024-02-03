@@ -20,10 +20,10 @@ class AdminUserDaoImpl : AdminUserDao {
         }
     }
 
-    override suspend fun getOneAdminUser(adminId: Int): AdminUser? {
+    override suspend fun getOneAdminUser(adminPassword:String): AdminUser? {
         return dbQuery {
             AdminUserTable.select {
-                AdminUserTable.id eq adminId
+                AdminUserTable.adminPassword eq adminPassword
             }.map {
                 AdminUserTable.resultRowToAdminUser(it)
             }.singleOrNull()
@@ -51,7 +51,7 @@ class AdminUserDaoImpl : AdminUserDao {
 
     override suspend fun updateAdminUser(adminUser: AdminUser) {
         dbQuery {
-            AdminUserTable.update({ UserTable.id eq adminUser.adminId }) {
+            AdminUserTable.update({ AdminUserTable.id eq adminUser.adminId }) {
                 it[adminUserName] = adminUser.adminName
                 it[adminPassword] = adminUser.adminPassword
                 it[licenseKey] = adminUser.licenseKey
@@ -60,10 +60,10 @@ class AdminUserDaoImpl : AdminUserDao {
         }
     }
 
-    override suspend fun deleteAdminUser(adminId: Int) {
+    override suspend fun deleteAdminUser(adminPassword: String) {
         dbQuery {
             AdminUserTable.deleteWhere {
-                AdminUserTable.id eq adminId
+                AdminUserTable.adminPassword eq adminPassword
             }
         }
     }

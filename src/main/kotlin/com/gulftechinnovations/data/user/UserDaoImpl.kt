@@ -12,16 +12,15 @@ class UserDaoImpl:UserDao {
     override suspend fun insertUser(user: User): Int {
         return dbQuery {
             UserTable.insert{
-                it[userName] = user.userName
                 it[userPassword] = user.userPassword
             }[UserTable.id].value
         }
     }
 
-    override suspend fun getOneUser(userId: Int): User? {
+    override suspend fun getOneUser(userPassword:String): User? {
       return dbQuery {
           UserTable.select {
-              UserTable.id eq userId
+              UserTable.userPassword eq userPassword
           }.map {
               UserTable.resultRowToUser(it)
           }.singleOrNull()
@@ -30,7 +29,7 @@ class UserDaoImpl:UserDao {
 
     override suspend fun getAllUsers(): List<User> {
         return dbQuery {
-            UserTable.selectAll().orderBy(UserTable.id,SortOrder.DESC)
+            UserTable.selectAll()
                 .map {
                 UserTable.resultRowToUser(it)
             }
@@ -38,20 +37,22 @@ class UserDaoImpl:UserDao {
 
     }
 
-    override suspend fun updateUser(user: User):Int {
+    override suspend fun updateUser(oldPassword:String,newPassword:String):String {
         return dbQuery {
               UserTable.update({
-                 UserTable.id eq user.userId
+                 UserTable.userPassword eq oldPassword
              }){
-                 it[userName] = user.userName
-                 it[userPassword] = user.userPassword
+                 it[userPassword] = newPassword
              }
+            newPassword
         }
     }
 
-    override suspend fun deleteUser(userId: Int) {
+    override suspend fun deleteUser(userPassword: String) {
         dbQuery {
-            UserTable.deleteWhere { id eq userId }
+            UserTable.deleteWhere {
+                this.userPassword eq userPassword
+            }
         }
     }
 }

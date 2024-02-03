@@ -25,7 +25,7 @@ fun Application.configureSecurity() {
                     .build()
             )
             validate { credential ->
-                println(credential.payload.claims["username"].toString())
+                println(credential.payload.claims["userPassword"].toString())
                 if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
             }
             challenge { _, _ ->
@@ -42,7 +42,7 @@ fun Application.configureSecurity() {
                     .build()
             )
             validate { credential ->
-                println(credential.payload.claims["username"].toString())
+                println(credential.payload.claims["userPassword"].toString())
                 if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
             }
             challenge { _, _ ->

@@ -64,7 +64,7 @@ class ApplicationTest {
                 CartDaoImpl()
             }
 
-            configureRouting(
+            /*configureRouting(
                 config = environment.config,
                 studentService = studentService,
                 userDao = userDao,
@@ -74,8 +74,10 @@ class ApplicationTest {
                 productDao = productDao,
                 multiProductDao = multiProductDao,
                 cartDao = cartDao,
-                client = client
-            )
+                client = client,
+                translate = Tre
+
+            )*/
         }
         client.get("/").apply {
             assertEquals(HttpStatusCode.OK, status)

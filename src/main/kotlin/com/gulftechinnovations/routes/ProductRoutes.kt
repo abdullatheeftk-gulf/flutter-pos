@@ -20,6 +20,7 @@ import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import java.awt.Image
 import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -45,17 +46,11 @@ fun Routing.productRoutes(
                     throw BadRequestException("Product is not added to any category")
                 }
                 val value = productDao.insertProduct(product = product)
-                call.respond(HttpStatusCode.Created, value)
-            }catch (e:ExposedSQLException){
-                println(e.message)
-                println(e.localizedMessage)
-                println(e.toString())
-                println(e.stackTrace)
-                e.printStackTrace()
-                call.respond(HttpStatusCode.Conflict, e.message ?: "There have some problem")
-            }
+                call.respond(value)
+            } catch (e: ExposedSQLException) {
 
-            catch (e: Exception) {
+                call.respond(HttpStatusCode.Conflict, e.message ?: "There have some problem")
+            } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "There have some problem")
             }
 
@@ -100,10 +95,11 @@ fun Routing.productRoutes(
         post("/addAProductPhoto/{productId}") {
 
             try {
+
                 val multipartData = call.receiveMultipart()
                 val productId = call.parameters["productId"]?.toInt() ?: throw BadRequestException("Invalid product Id")
 
-                var imageByteArray:ByteArray
+                var imageByteArray: ByteArray
 
                 multipartData.forEachPart { part ->
                     when (part) {
@@ -112,32 +108,35 @@ fun Routing.productRoutes(
                             val listOfString = originalFileName.split(".")
                             val mime = listOfString.last()
 
-
-                            val bufferedImage = ImageIO.read(part.streamProvider())
+                            val inputStream = part.streamProvider()
+                            val bufferedImage = ImageIO.read(inputStream)
                             val width = bufferedImage.width
                             val height = bufferedImage.height
 
 
                             val productName = productDao.getAProductNameById(productId = productId)
 
-                            imageByteArray = if(width>500){
+                            imageByteArray =
                                 convertAndResizeBufferImageToFile(
                                     bi = bufferedImage,
                                     mime = mime,
                                     width = width,
                                     height = height,
                                 )
-                            }else{
-                                part.streamProvider().readBytes()
-                            }
 
-                            uploadAnImageToGoogleCloudStorageAsByteArray(
+
+                            // enable only when release mode
+                            /*uploadAnImageToGoogleCloudStorageAsByteArray(
                                 projectId = projectId,
                                 bucketName = bucketName,
                                 objectName = "$productName.$mime",
                                 byteArray = imageByteArray,
                                 mime = mime
-                            )
+                            )*/
+
+                            // for local
+                            println(imageByteArray.size)
+                            File("images/$productName.$mime").writeBytes(imageByteArray)
 
                             launch(Dispatchers.IO) {
                                 productDao.updateAProductPhoto(
@@ -158,14 +157,88 @@ fun Routing.productRoutes(
             }
         }
 
+        put("/removeAndUpdateProductPhoto/{productId}"){
+            try {
+                val multipartData = call.receiveMultipart()
+                val productId = call.parameters["productId"]?.toInt() ?: throw BadRequestException("Invalid product Id")
+
+                val product = productDao.getProductsById(productId = productId) ?: throw BadRequestException("No Products with this id")
+                val productImage = product.productImage
+                productImage?.let {pImage->
+                    try{
+                        File("images/$pImage").delete()
+                    }catch (e:IOException){
+                        println(e.message)
+                    }
+                }
+
+                var imageByteArray: ByteArray
+
+                multipartData.forEachPart { part ->
+                    when (part) {
+                        is PartData.FileItem -> {
+                            val originalFileName = part.originalFileName as String
+                            val listOfString = originalFileName.split(".")
+                            val mime = listOfString.last()
+
+                            val inputStream = part.streamProvider()
+                            val bufferedImage = ImageIO.read(inputStream)
+                            val width = bufferedImage.width
+                            val height = bufferedImage.height
+
+
+                            val productName = productDao.getAProductNameById(productId = productId)
+
+                            imageByteArray =
+                                convertAndResizeBufferImageToFile(
+                                    bi = bufferedImage,
+                                    mime = mime,
+                                    width = width,
+                                    height = height,
+                                )
+
+
+                            // enable only when release mode
+                            /*uploadAnImageToGoogleCloudStorageAsByteArray(
+                                projectId = projectId,
+                                bucketName = bucketName,
+                                objectName = "$productName.$mime",
+                                byteArray = imageByteArray,
+                                mime = mime
+                            )*/
+
+                            // for local
+                            File("images/$productName.$mime").writeBytes(imageByteArray)
+
+                            launch(Dispatchers.IO) {
+                                productDao.updateAProductPhoto(
+                                    productId = productId,
+                                    productName = "$productName.$mime"
+                                )
+                            }
+
+
+                        }
+
+                        else -> Unit
+                    }
+                }
+                call.respond("Image updated")
+
+
+            }catch (e: Exception) {
+                call.respond(HttpStatusCode.BadRequest, e.message ?: "There have some problem")
+            }
+
+        }
+
         get("/getAllProduct") {
             try {
                 val products = productDao.getAllProducts()
-                if (products.isEmpty()) {
-                    call.respond(HttpStatusCode.NoContent, products)
-                } else {
-                    call.respond(products)
-                }
+
+                call.respond(products)
+                //call.respond(HttpStatusCode.Conflict)
+
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.ExpectationFailed, e.message ?: "There have some problem")
             }
@@ -175,11 +248,9 @@ fun Routing.productRoutes(
             try {
                 val searchText = call.parameters["search"] ?: throw Exception("Invalid search keyword")
                 val products = productDao.searchProductsByName("%$searchText%")
-                if (products.isEmpty()) {
-                    call.respond(HttpStatusCode.NoContent)
-                } else {
-                    call.respond(hashMapOf("products" to products))
-                }
+
+                call.respond(products)
+
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.ExpectationFailed, e.message ?: "There have some problem")
             }
@@ -193,16 +264,16 @@ fun Routing.productRoutes(
                     call.parameters["categoryId"]?.toInt() ?: throw BadRequestException("Invalid categoryId")
                 val products = productDao.getProductsByCategoryId(categoryId = categoryId)
                 if (products.isEmpty()) {
-                    call.respond(HttpStatusCode.NoContent)
+                    call.respond(products)
                 } else {
-                    call.respond(hashMapOf("products" to products))
+                    call.respond(products)
                 }
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "There have some problem")
             }
         }
 
-        post("/updateAProduct") {
+        put("/updateAProduct") {
             try {
                 val product = call.receive<Product>()
                 productDao.updateAProduct(product = product)
@@ -215,13 +286,111 @@ fun Routing.productRoutes(
 
         delete("/deleteAProduct/{id}") {
             try {
-                val productId = call.parameters["id"]?.toInt() ?: throw Exception("There have some problem")
+                val productId = call.parameters["id"]?.toInt() ?: throw BadRequestException("There have some problem")
+                val product = productDao.getProductsById(productId)?:throw  Exception("No products with this productId $productId")
+                val productImage = product.productImage
+
                 productDao.deleteAProduct(productId = productId)
+
+                productImage?.let {
+                    File("images/$it").delete()
+                }
+
                 call.respond("deleted")
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "There have some problem")
             }
         }
+
+        get ("/getAProductById/{id}"){
+            try {
+                val productId = call.parameters["id"]?.toInt() ?: throw Exception("There have some problem")
+                val product = productDao.getProductsById(productId = productId) ?: throw  Exception("No products with this id")
+                call.respond(product)
+            }catch (e: Exception) {
+                call.respond(HttpStatusCode.BadRequest, e.message ?: "There have some problem")
+            }
+        }
+
+        post("/updateProductPhoto/{productId}") {
+            try {
+                val productId = call.parameters["productId"]?.toInt()?:throw  Exception("Invalid productId")
+                val imageBytes = call.receive<ByteArray>()
+                val inputArrayStream = ByteArrayInputStream(imageBytes)
+
+                val bufferedImage = ImageIO.read(inputArrayStream)
+                val width = bufferedImage.width
+                val height = bufferedImage.height
+
+
+                val fileName = call.request.queryParameters["name"] ?: throw Exception("no name")
+
+                val names = fileName.split(".")
+                val mime = names[1]
+
+                val bytes = convertAndResizeBufferImageToFile(
+                    bi = bufferedImage,
+                    mime = mime,
+                    width = width,
+                    height = height
+                )
+
+                val previousProduct = productDao.getProductsById(productId) ?: throw Exception("No product with this id")
+
+
+                previousProduct.productImage?.let {productImage->
+                    File("images/$productImage").delete()
+                }
+
+
+                val productName = productDao.getAProductNameById(productId = productId)
+
+
+                File("images/$productName.$mime").writeBytes(bytes)
+
+                productDao.updateAProductPhoto(productId, "$productName.$mime")
+
+                call.respond("Success")
+
+            } catch (e: Exception) {
+                println(e.message)
+                call.respond(status = HttpStatusCode.BadRequest, e.message ?: "There have some problem")
+            }
+
+        }
+
+        delete("/removeAProductPhoto/{productId}") {
+            try{
+                val productId = call.parameters["productId"]?.toInt()?:throw BadRequestException("No product id")
+                val product = productDao.getProductsById(productId) ?: throw  BadRequestException("No product with productId:- $productId")
+                val productImage = product.productImage
+
+                productImage?.let {image->
+                    File("images/$image").delete()
+                }
+
+                productDao.updateAProductPhoto(productId, productName = null)
+
+                call.respond("deleted")
+
+            }catch (e: Exception) {
+                println(e.message)
+                call.respond(status = HttpStatusCode.BadRequest, e.message ?: "There have some problem")
+            }
+        }
+
+        get("/getSelectedCategories/{productId}") {
+            try{
+                val productId = call.parameters["productId"]?.toInt() ?:throw  Exception("No product id")
+                val categories = productDao.getAProductCategories(productId)
+                call.respond(categories)
+            }catch (e: Exception) {
+                call.respond(HttpStatusCode.BadRequest, e.message ?: "There have some problem")
+            }
+
+        }
+
+
     }
 
 }
@@ -231,18 +400,19 @@ fun convertAndResizeBufferImageToFile(
     mime: String,
     width: Int,
     height: Int,
+    ): ByteArray {
 
-):ByteArray {
-    val ratio = width/500f
-    val targetHeight = (height/ratio).toInt()
+    val ratio = if(width>500) width / 500f else 1f
+    val targetHeight = (height / ratio).toInt()
+    val targetWidth = if(width>500) 500 else width
 
-    val resultImage = bi.getScaledInstance(500, targetHeight, Image.SCALE_DEFAULT)
-    val outputImage = BufferedImage(500, targetHeight, BufferedImage.TYPE_INT_RGB);
+    val resultImage = bi.getScaledInstance(targetWidth, targetHeight, Image.SCALE_DEFAULT)
+    val outputImage = BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
     outputImage.graphics.drawImage(resultImage, 0, 0, null)
 
-    val baos:ByteArrayOutputStream = ByteArrayOutputStream()
-    ImageIO.write(outputImage,mime,baos)
-    return  baos.toByteArray()
+    val baos: ByteArrayOutputStream = ByteArrayOutputStream()
+    ImageIO.write(outputImage, mime, baos)
+    return baos.toByteArray()
 }
 
 @Throws(IOException::class)
@@ -270,7 +440,7 @@ suspend fun uploadAnImageToGoogleCloudStorageAsByteArray(
             )
         }
 
-        val blob = storage.create(blobInfo, byteArray,preCondition)
+        val blob = storage.create(blobInfo, byteArray, preCondition)
 
 
         blob.mediaLink

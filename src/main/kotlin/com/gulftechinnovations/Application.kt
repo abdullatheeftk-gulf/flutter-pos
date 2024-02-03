@@ -1,5 +1,6 @@
 package com.gulftechinnovations
 
+import com.google.cloud.translate.TranslateOptions
 import com.gulftechinnovations.data.admin.AdminUserDao
 import com.gulftechinnovations.data.admin.AdminUserDaoImpl
 import com.gulftechinnovations.data.cart.CartDaoImpl
@@ -13,7 +14,10 @@ import com.gulftechinnovations.data.user.UserDaoImpl
 import com.gulftechinnovations.database.DatabaseFactory
 import com.gulftechinnovations.database.dbQuery
 import com.gulftechinnovations.model.AdminUser
-import com.gulftechinnovations.plugins.*
+import com.gulftechinnovations.plugins.configureHTTP
+import com.gulftechinnovations.plugins.configureRouting
+import com.gulftechinnovations.plugins.configureSecurity
+import com.gulftechinnovations.plugins.configureSerialization
 import com.gulftechinnovations.service.StudentService
 import com.gulftechinnovations.service.StudentServiceImpl
 import io.ktor.client.*
@@ -29,7 +33,10 @@ fun main(args: Array<String>) {
 
 fun Application.module() {
 
-    DatabaseFactory.init()
+
+
+
+    DatabaseFactory.init(config = environment.config)
 
     val client = HttpClient(OkHttp) {
         install(ContentNegotiation) {
@@ -72,6 +79,9 @@ fun Application.module() {
     configureHTTP()
     configureSecurity()
 
+    val translate =  TranslateOptions.getDefaultInstance().service
+
+
     configureRouting(
         studentService = studentService,
         config = environment.config,
@@ -83,6 +93,8 @@ fun Application.module() {
         productDao = productDao,
         multiProductDao = multiProductDao,
         client = client,
+
+        translate = translate
     )
 
     registerAdminUserAddDefaultCategoryValues(adminUserDao = adminUserDao)
@@ -90,7 +102,7 @@ fun Application.module() {
 
 fun registerAdminUserAddDefaultCategoryValues(adminUserDao: AdminUserDao) {
     runBlocking {
-        val adminUser = adminUserDao.getOneAdminUser(adminId = 1)
+        val adminUser = adminUserDao.getOneAdminUser(adminPassword = "741")
         if (adminUser == null) {
             dbQuery {
                 adminUserDao.insertAdminUser(
@@ -105,4 +117,7 @@ fun registerAdminUserAddDefaultCategoryValues(adminUserDao: AdminUserDao) {
         }
     }
 }
+
+
+
 

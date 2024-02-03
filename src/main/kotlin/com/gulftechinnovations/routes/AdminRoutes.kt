@@ -4,11 +4,14 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.gulftechinnovations.model.AdminUser
 import com.gulftechinnovations.data.admin.AdminUserDao
+import com.gulftechinnovations.model.AdminPasswordToReset
+import com.gulftechinnovations.model.AdminResponse
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.serialization.Serializable
 import java.util.*
 
 fun Routing.adminRoutes(
@@ -23,12 +26,14 @@ fun Routing.adminRoutes(
 
         post("/loginAdminUser") {
             try {
+
+
                 val adminUser = call.receive<AdminUser>()
-                val headersSample = call.request.header(name = "sample")
-                println("===================== $headersSample")
+
                 println(adminUser)
+
                 val adminUserFromDatabase = adminUserDao.getOneAdminUserByName(adminUser = adminUser)
-                    ?: throw Exception("User is not exist")
+                    ?: throw Exception("Admin User is not exist")
 
                 val date = Date()
                 date.time += 15 * 60 * 1000
@@ -39,10 +44,13 @@ fun Routing.adminRoutes(
                     .withExpiresAt(date)
                     .sign(Algorithm.HMAC256(jwtSecret))
 
-                call.respond(hashMapOf("token" to token))
+                val adminResponse = AdminResponse(
+                    adminUserFromDatabase, token
+                )
+
+                call.respond(adminResponse)
 
             } catch (e: Exception) {
-                e.printStackTrace()
                 call.respond(status = HttpStatusCode.BadRequest, message = e.message ?: "There have problem on request")
             }
         }
@@ -61,7 +69,41 @@ fun Routing.adminRoutes(
                     .withExpiresAt(date)
                     .sign(Algorithm.HMAC256(jwtSecret))
 
-                call.respond(HttpStatusCode.Created,hashMapOf("token" to token))
+                val adminResponse = AdminResponse(
+                    adminUser, token
+                )
+
+                call.respond(HttpStatusCode.Created, adminResponse)
+
+            } catch (e: Exception) {
+                call.respond(status = HttpStatusCode.BadRequest, message = e.message ?: "There have problem on request")
+            }
+        }
+
+
+        put("/updateAdminUser") {
+            try {
+                val adminPasswordToReset = call.receive<AdminPasswordToReset>()
+
+                val newAdminReceived = adminPasswordToReset.newAdminUser
+                val oldAdminReceived = adminPasswordToReset.oldAdminUser
+
+                val oldAdminUser = adminUserDao.getOneAdminUser(adminPassword = oldAdminReceived.adminPassword)
+                    ?: throw Exception("No admin user with this password")
+
+                val newAdminUser = oldAdminUser.copy(
+                    adminId = oldAdminUser.adminId,
+                    adminName = newAdminReceived.adminName,
+                    adminPassword = newAdminReceived.adminPassword,
+                    licenseKey = newAdminReceived.licenseKey,
+                    isLicenceKeyVerified = newAdminReceived.isLicenceKeyVerified
+                )
+
+                adminUserDao.updateAdminUser(adminUser = newAdminUser)
+
+
+                call.respond("Updated Admin User")
+
 
             } catch (e: Exception) {
                 call.respond(status = HttpStatusCode.BadRequest, message = e.message ?: "There have problem on request")
@@ -69,3 +111,4 @@ fun Routing.adminRoutes(
         }
     }
 }
+

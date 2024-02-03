@@ -25,8 +25,18 @@ fun Routing.categoryRoutes(
             try {
                 val category = call.receive<Category>()
                 val value = categoryDao.insertCategory(category = category)
-                call.respond(status = HttpStatusCode.Created, message = value)
+                call.respond(message = value)
             } catch (e: Exception) {
+                call.respond(HttpStatusCode.BadRequest, message = e.message ?: "There have some problem")
+            }
+        }
+
+        get("/getACategoryByName/{name}") {
+            try{
+                val name = call.parameters["name"] ?: throw  Exception("No name parameter")
+                val categoryName = categoryDao.getOneCategoryByName(name) ?: throw  Exception("No category with this name")
+                call.respond(categoryName)
+            }catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest, message = e.message ?: "There have some problem")
             }
         }
@@ -97,7 +107,7 @@ fun Routing.categoryRoutes(
                     val subCategories = subCategoryDao.getAllSubCategoriesByCategoryId(it.categoryId)
                     it.subCategories.addAll(subCategories)
                 }
-                call.respond(hashMapOf("result" to categories))
+                call.respond(categories)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.ExpectationFailed, e.message ?: "There have some problem")
             }
@@ -110,6 +120,7 @@ fun Routing.categoryRoutes(
                     ?: throw BadRequestException("No categories with this id")
                 call.respond(category)
             } catch (e: Exception) {
+                println(e)
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "There have some problem")
             }
         }
@@ -131,6 +142,8 @@ fun Routing.categoryRoutes(
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "There have some problem")
             }
         }
+
+
 
     }
 

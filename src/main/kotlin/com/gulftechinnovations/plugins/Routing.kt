@@ -1,6 +1,7 @@
 package com.gulftechinnovations.plugins
 
 import com.detectlanguage.DetectLanguage
+import com.google.cloud.translate.Translate
 import com.gulftechinnovations.data.admin.AdminUserDao
 import com.gulftechinnovations.data.cart.CartDao
 import com.gulftechinnovations.data.category.CategoryDao
@@ -24,7 +25,14 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import net.suuft.libretranslate.Language
 import net.suuft.libretranslate.Translator
+import org.apache.logging.log4j.kotlin.KotlinLogger
+import org.apache.logging.log4j.kotlin.Logging
+import java.awt.Image
+import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
+import javax.imageio.ImageIO
 
 fun Application.configureRouting(
     config: ApplicationConfig,
@@ -36,8 +44,11 @@ fun Application.configureRouting(
     productDao: ProductDao,
     multiProductDao: MultiProductDao,
     cartDao: CartDao,
-    client: HttpClient
+    client: HttpClient,
+
+    translate: Translate,
 ) {
+
 
     val projectId = config.property("gcp.projectName").getString()
     val bucketName = config.property("gcp.storageBucketName").getString()
@@ -108,11 +119,29 @@ fun Application.configureRouting(
                 val text = call.receiveText()
                 val translatedText = deepLTranslate(text)
                 call.respondText(translatedText)
-            }catch (e: Exception) {
+            } catch (e: Exception) {
                 call.respond(status = HttpStatusCode.BadRequest, e.message ?: "There have some problem")
             }
 
         }
+
+        post("/googleTranslate") {
+            try {
+                val text = call.receiveText()
+                println(text)
+                val result = translate.translate(
+                    text,
+                    Translate.TranslateOption.sourceLanguage("en"),
+                    Translate.TranslateOption.targetLanguage("ar")
+                )
+                call.respond(result.translatedText)
+            } catch (e: Exception) {
+                println(e.message)
+                call.respond(status = HttpStatusCode.BadRequest, e.message ?: "There have some problem")
+            }
+        }
+
+
 
 
 
@@ -135,9 +164,12 @@ fun Application.configureRouting(
 
 
         // Static plugin. Try to access `/static/index.html`
-        static("/static") {
+        /*static("/static") {
             resources("static")
-        }
-       // staticFiles("/static", File("src/main/resources/static"))
+        }*/
+        staticFiles("/images", File("images/"))
     }
 }
+
+
+
