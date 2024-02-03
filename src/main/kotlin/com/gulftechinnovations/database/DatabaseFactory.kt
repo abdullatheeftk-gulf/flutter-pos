@@ -23,11 +23,16 @@ object DatabaseFactory {
         val postgresUser = config.property("postgres.user").getString()
         val postgresPassword = config.property("postgres.password").getString()
 
+        val sqlServerDriverClassName = config.property("sqlserver.driverClassName").getString()
+        val sqlServerUrl = config.property("sqlserver.jdbcURL").getString()
+        val sqlServerUser = config.property("sqlserver.user").getString()
+        val sqlServerPassword = config.property("sqlserver.password").getString()
+
         val database = Database.connect(
-            postgresUrl,  // Replace "mydb" with your database name
-            driver = postgresDriverClassName,
-            user = postgresUser, // Replace with your PostgreSQL username
-            password = postgresPassword // Replace with your PostgreSQL password
+            url = sqlServerUrl,  // Replace "mydb" with your database name
+            driver = sqlServerDriverClassName,
+            user = sqlServerUser, // Replace with your PostgreSQL username
+            password = sqlServerPassword, // Replace with your PostgreSQL password
         )
 
 

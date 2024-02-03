@@ -80,6 +80,9 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
 
+    // Sql server
+    implementation("com.microsoft.sqlserver:mssql-jdbc:12.4.2.jre11")
+
 
     // Translation
     implementation ("net.clojars.suuft:libretranslate-java:1.0.5")
