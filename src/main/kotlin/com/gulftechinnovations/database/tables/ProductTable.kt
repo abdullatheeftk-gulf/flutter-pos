@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.ReferenceOption
 
 object ProductTable: IntIdTable() {
     val productName = varchar(name = "productName", length = 512).uniqueIndex()
-    val productLocalName = varchar(name = "productLocalName", length = 512).nullable()
+    val productLocalName = varchar(name = "productLocalName", length = 512/*,collate = "Arabic_CI_AI_KS_WS"*/).nullable()
     val productPrice = float(name = "productPrice")
     val productTaxInPercentage = float(name="productTaxInPercentage")
     val productImage = varchar(name = "productImage", length = 128).nullable()

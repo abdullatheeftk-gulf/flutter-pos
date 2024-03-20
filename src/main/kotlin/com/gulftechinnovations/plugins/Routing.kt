@@ -1,38 +1,32 @@
 package com.gulftechinnovations.plugins
 
-import com.detectlanguage.DetectLanguage
-import com.google.cloud.translate.Translate
 import com.gulftechinnovations.data.admin.AdminUserDao
 import com.gulftechinnovations.data.cart.CartDao
 import com.gulftechinnovations.data.category.CategoryDao
+import com.gulftechinnovations.data.dine_in.area.DineInAreaDao
+import com.gulftechinnovations.data.dine_in.table.DineInTableDao
 import com.gulftechinnovations.data.multi_product.MultiProductDao
 import com.gulftechinnovations.data.product.ProductDao
+import com.gulftechinnovations.data.sample.AbDao
+import com.gulftechinnovations.data.sample.CdDao
 import com.gulftechinnovations.data.sub_category.SubCategoryDao
 import com.gulftechinnovations.data.user.UserDao
-import com.gulftechinnovations.model.Transliterate
 import com.gulftechinnovations.routes.*
+import com.gulftechinnovations.routes.dine_in_routes.dineInAreaRoutes
+import com.gulftechinnovations.routes.dine_in_routes.dineInTableRoutes
+import com.gulftechinnovations.routes.sample_routes.abRoutes
+import com.gulftechinnovations.routes.sample_routes.cdRoutes
 import com.gulftechinnovations.service.StudentService
-import com.gulftechinnovations.translation.deepLTranslate
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
+//import io.ktor.client.*
+//import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import io.ktor.server.http.content.*
-import io.ktor.server.request.*
+//import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import net.suuft.libretranslate.Language
-import net.suuft.libretranslate.Translator
-import org.apache.logging.log4j.kotlin.KotlinLogger
-import org.apache.logging.log4j.kotlin.Logging
-import java.awt.Image
-import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.delay
 import java.io.File
-import javax.imageio.ImageIO
 
 fun Application.configureRouting(
     config: ApplicationConfig,
@@ -44,9 +38,10 @@ fun Application.configureRouting(
     productDao: ProductDao,
     multiProductDao: MultiProductDao,
     cartDao: CartDao,
-    client: HttpClient,
-
-    translate: Translate,
+    dineInTableDao: DineInTableDao,
+    dineInAreaDao: DineInAreaDao,
+    abDao: AbDao,
+    cdDao:CdDao
 ) {
 
 
@@ -55,10 +50,10 @@ fun Application.configureRouting(
 
     routing {
         get("/") {
-            call.respondText("Unipos Android pos")
+            call.respondText("Unipos Android pos sample")
         }
 
-        get("/translate/{text}") {
+        /*get("/translate/{text}") {
             try {
                 val text = call.parameters["text"] ?: throw Exception("null text")
                 val translatedText = Translator.translate(Language.ENGLISH, Language.ARABIC, text)
@@ -73,29 +68,29 @@ fun Application.configureRouting(
                 call.respond(HttpStatusCode.BadRequest, message = e.message ?: "There have some problem")
 
             }
-        }
+        }*/
 
-        get("transliterate/{text}") {
-            try {
-                val text = call.parameters["text"] ?: throw Exception("null text")
-                val response = client.get(urlString = "https://transliterate.qcri.org/en2ar/$text")
-                if (response.status.value == 200) {
-                    val value = response.body<Transliterate>()
-                    call.respondText(value.results)
-                } else {
-                    throw Exception("Expectation failed")
+        /*    get("transliterate/{text}") {
+                try {
+                    val text = call.parameters["text"] ?: throw Exception("null text")
+                    val response = client.get(urlString = "https://transliterate.qcri.org/en2ar/$text")
+                    if (response.status.value == 200) {
+                        val value = response.body<Transliterate>()
+                        call.respondText(value.results)
+                    } else {
+                        throw Exception("Expectation failed")
+                    }
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, message = e.message ?: "There have some problem")
                 }
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.BadRequest, message = e.message ?: "There have some problem")
-            }
-        }
+            }*/
 
         get("/getAllAdminUsers") {
             val users = adminUserDao.getAllAdminUsers()
             call.respond(users)
         }
 
-        get("/downloadAnImage/{filename}") {
+        /*get("/downloadAnImage/{filename}") {
             try {
                 val fileName = call.parameters["filename"] ?: throw Exception("File name is empty")
                 val result = downloadObjectAsBytes(
@@ -112,9 +107,9 @@ fun Application.configureRouting(
             } catch (e: Exception) {
                 call.respond(status = HttpStatusCode.BadRequest, e.message ?: "There have some problem")
             }
-        }
+        }*/
 
-        post("/deepLTranslate") {
+        /*post("/deepLTranslate") {
             try {
                 val text = call.receiveText()
                 val translatedText = deepLTranslate(text)
@@ -123,23 +118,23 @@ fun Application.configureRouting(
                 call.respond(status = HttpStatusCode.BadRequest, e.message ?: "There have some problem")
             }
 
-        }
+        }*/
 
-        post("/googleTranslate") {
-            try {
-                val text = call.receiveText()
-                println(text)
-                val result = translate.translate(
-                    text,
-                    Translate.TranslateOption.sourceLanguage("en"),
-                    Translate.TranslateOption.targetLanguage("ar")
-                )
-                call.respond(result.translatedText)
-            } catch (e: Exception) {
-                println(e.message)
-                call.respond(status = HttpStatusCode.BadRequest, e.message ?: "There have some problem")
-            }
-        }
+        /* post("/googleTranslate") {
+             try {
+                 val text = call.receiveText()
+                 println(text)
+                 val result = translate.translate(
+                     text,
+                     Translate.TranslateOption.sourceLanguage("en"),
+                     Translate.TranslateOption.targetLanguage("ar")
+                 )
+                 call.respond(result.translatedText)
+             } catch (e: Exception) {
+                 println(e.message)
+                 call.respond(status = HttpStatusCode.BadRequest, e.message ?: "There have some problem")
+             }
+         }*/
 
 
 
@@ -148,7 +143,7 @@ fun Application.configureRouting(
 
         studentRoutes(studentService = studentService, config = config)
 
-        adminRoutes(application = application, adminUserDao = adminUserDao)
+        adminRoutes(application = application, adminUserDao = adminUserDao, userDao = userDao)
 
         userRoutes(userDao = userDao, application = application)
 
@@ -161,6 +156,13 @@ fun Application.configureRouting(
         multiProductRoutes(multiProductDao = multiProductDao)
 
         cartRoutes(cartDao = cartDao, productDao = productDao)
+
+        dineInAreaRoutes(dineInAreaDao = dineInAreaDao, dineInTableDao = dineInTableDao)
+
+        dineInTableRoutes(dineInTableDao = dineInTableDao)
+
+        abRoutes(abDao =abDao )
+        cdRoutes(cdDao =cdDao )
 
 
         // Static plugin. Try to access `/static/index.html`

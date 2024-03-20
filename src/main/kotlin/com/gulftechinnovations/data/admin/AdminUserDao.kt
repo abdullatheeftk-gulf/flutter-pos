@@ -5,9 +5,11 @@ import com.gulftechinnovations.model.AdminUser
 interface AdminUserDao {
     suspend fun insertAdminUser(adminUser: AdminUser):Int
 
-    suspend fun getOneAdminUser(adminPassword:String): AdminUser?
+    suspend fun getOneAdminUser(adminUser: AdminUser):AdminUser?
 
-    suspend fun getOneAdminUserByName(adminUser: AdminUser): AdminUser?
+    suspend fun getOneAdminUserByPassword(adminPassword:String): AdminUser?
+
+    suspend fun getOneAdminUserByName(adminName:String): AdminUser?
 
     suspend fun getAllAdminUsers():List<AdminUser>
 

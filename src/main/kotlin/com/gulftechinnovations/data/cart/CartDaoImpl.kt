@@ -80,7 +80,8 @@ class CartDaoImpl : CartDao {
                     cartProductItems.add(cartProductItem)
 
                 }
-                cart.cartProductItems = cartProductItems
+                //cart.cartProductItems = cartProductItems
+                cart.copy(cartProductItems = cartProductItems)
             }
 
             list
@@ -119,7 +120,8 @@ class CartDaoImpl : CartDao {
                     cartProductItems.add(cartProductItem)
 
                 }
-                cart.cartProductItems = cartProductItems
+                //cart.cartProductItems = cartProductItems
+                cart.copy(cartProductItems = cartProductItems)
             }
 
             list
@@ -158,7 +160,8 @@ class CartDaoImpl : CartDao {
                     cartProductItems.add(cartProductItem)
 
                 }
-                cart.cartProductItems = cartProductItems
+                //cart.cartProductItems = cartProductItems
+                cart.copy(cartProductItems = cartProductItems)
             }
 
             list
@@ -191,7 +194,8 @@ class CartDaoImpl : CartDao {
                     )
                     cartProductItems.add(cartProductItem)
                 }
-                cart.cartProductItems = cartProductItems
+                //cart.cartProductItems = cartProductItems
+                cart.copy(cartProductItems = cartProductItems)
 
             }
 

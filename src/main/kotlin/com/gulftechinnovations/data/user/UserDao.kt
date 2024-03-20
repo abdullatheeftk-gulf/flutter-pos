@@ -9,7 +9,7 @@ interface UserDao {
 
     suspend fun getAllUsers():List<User>
 
-    suspend fun updateUser(oldPassword:String,newPassword:String):String
+    suspend fun updateUser(oldPassword:String,newUser: User):String
 
     suspend fun deleteUser(userPassword: String)
 

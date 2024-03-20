@@ -1,3 +1,4 @@
+/*
 package com.gulftechinnovations.translation
 
 import com.deepl.api.Translator
@@ -15,4 +16,4 @@ suspend fun deepLTranslate(text:String):String{
              e.message ?: "Some error"
         }
     }
-}
+}*/

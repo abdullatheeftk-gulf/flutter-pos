@@ -20,7 +20,17 @@ class AdminUserDaoImpl : AdminUserDao {
         }
     }
 
-    override suspend fun getOneAdminUser(adminPassword:String): AdminUser? {
+    override suspend fun getOneAdminUser(adminUser: AdminUser): AdminUser? {
+        return  dbQuery {
+            AdminUserTable.select {
+                (AdminUserTable.adminUserName eq adminUser.adminName) and (AdminUserTable.adminPassword eq adminUser.adminPassword)
+            }.map {
+                AdminUserTable.resultRowToAdminUser(it)
+            }.singleOrNull()
+        }
+    }
+
+    override suspend fun getOneAdminUserByPassword(adminPassword:String): AdminUser? {
         return dbQuery {
             AdminUserTable.select {
                 AdminUserTable.adminPassword eq adminPassword
@@ -30,11 +40,10 @@ class AdminUserDaoImpl : AdminUserDao {
         }
     }
 
-    override suspend fun getOneAdminUserByName(adminUser: AdminUser): AdminUser? {
+    override suspend fun getOneAdminUserByName(adminName:String): AdminUser? {
         return  dbQuery {
             AdminUserTable.select {
-                (AdminUserTable.adminUserName eq adminUser.adminName) and
-                        (AdminUserTable.adminPassword eq adminUser.adminPassword)
+                (AdminUserTable.adminUserName eq adminName)
             }.map {
                 AdminUserTable.resultRowToAdminUser(it)
             }.singleOrNull()

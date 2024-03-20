@@ -1,9 +1,9 @@
 package com.gulftechinnovations.routes
 
-import com.google.cloud.storage.BlobId
+/*import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.Storage
-import com.google.cloud.storage.StorageOptions
+import com.google.cloud.storage.StorageOptions*/
 import com.gulftechinnovations.data.product.ProductDao
 import com.gulftechinnovations.model.Product
 import io.ktor.http.*
@@ -16,7 +16,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import java.awt.Image
 import java.awt.image.BufferedImage
@@ -25,7 +24,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import javax.imageio.ImageIO
-import kotlin.coroutines.coroutineContext
 
 fun Routing.productRoutes(
     productDao: ProductDao,
@@ -41,6 +39,7 @@ fun Routing.productRoutes(
         post("/addAProduct") {
             try {
                 val product = call.receive<Product>()
+                println(product)
                 println(product)
                 if (product.categories.isEmpty()) {
                     throw BadRequestException("Product is not added to any category")
@@ -153,6 +152,7 @@ fun Routing.productRoutes(
                 }
                 call.respond("Success")
             } catch (e: Exception) {
+                println("${e.message}")
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "There have some problem")
             }
         }
@@ -415,7 +415,7 @@ fun convertAndResizeBufferImageToFile(
     return baos.toByteArray()
 }
 
-@Throws(IOException::class)
+/*@Throws(IOException::class)
 suspend fun uploadAnImageToGoogleCloudStorageAsByteArray(
     projectId: String,
     bucketName: String,
@@ -446,4 +446,4 @@ suspend fun uploadAnImageToGoogleCloudStorageAsByteArray(
         blob.mediaLink
     }
 
-}
+}*/

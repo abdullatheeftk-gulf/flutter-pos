@@ -14,8 +14,8 @@ import com.gulftechinnovations.plugins.*
 import com.gulftechinnovations.service.StudentService
 import com.gulftechinnovations.service.StudentServiceImpl
 import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.contentnegotiation.*
+/*import io.ktor.client.engine.okhttp.*
+import io.ktor.client.plugins.contentnegotiation.**/
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -28,11 +28,11 @@ class ApplicationTest {
     fun testRoot() = testApplication {
         application {
 
-            val client = HttpClient(OkHttp) {
+            /*val client = HttpClient(OkHttp) {
                 install(ContentNegotiation) {
                     json()
                 }
-            }
+            }*/
             val studentService: StudentService by lazy {
                 StudentServiceImpl()
             }

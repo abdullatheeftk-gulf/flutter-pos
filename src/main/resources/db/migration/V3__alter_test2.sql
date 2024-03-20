@@ -1,0 +1,1 @@
+ALTER TABLE "student" ADD COLUMN test_column VARCHAR(128);

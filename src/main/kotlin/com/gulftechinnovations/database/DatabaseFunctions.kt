@@ -1,7 +1,13 @@
 package com.gulftechinnovations.database
 
 import com.gulftechinnovations.database.tables.*
+import com.gulftechinnovations.database.tables.test_samples.AbTable
+import com.gulftechinnovations.database.tables.test_samples.CdTable
 import com.gulftechinnovations.model.*
+import com.gulftechinnovations.model.dine_in.DineInArea
+import com.gulftechinnovations.model.dine_in.DineInTable
+import com.gulftechinnovations.model.test_samples.Ab
+import com.gulftechinnovations.model.test_samples.Cd
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -17,7 +23,9 @@ fun StudentTable.rowToStudent(row: ResultRow) = Student(
 
 fun UserTable.resultRowToUser(row: ResultRow) = User(
     userId = row[id].value,
-    userPassword = row[this.userPassword]
+    userPassword = row[this.userPassword],
+    userName = row[this.userName]
+
 )
 
 fun AdminUserTable.resultRowToAdminUser(row: ResultRow) = AdminUser(
@@ -85,6 +93,31 @@ fun CartProductTable.resultRowToCart(row: ResultRow) = CartProduct(
     productLocalCartName = row[productLocalCartName],
     noOfItemsOrdered = row[noOfItemsOrdered],
     note = row[note]
+)
+
+fun DineAreaTable.resultRowToDineArea(row:ResultRow) = DineInArea(
+    id = row[id].value,
+    name = row[name]
+)
+
+fun DineInTableTable.resultRowToDineInTable(row: ResultRow) = DineInTable(
+    id = row[id].value,
+    name = row[name],
+    areaId = row[areaId],
+    noOfSeats = row[noOfSeats],
+    noOfSeatsOccupied = row[noOfSeatsOccupied]
+)
+
+fun AbTable.resultRowToAbTable(row:ResultRow) = Ab(
+    id = row[id].value,
+    name = row[name]
+)
+
+fun CdTable.resultRowToCdTable(row: ResultRow) = Cd(
+    id = row[id].value,
+    name = row[name],
+    price = row[price],
+    abId = row[abId]
 )
 
 

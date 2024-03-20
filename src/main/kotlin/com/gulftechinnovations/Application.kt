@@ -1,13 +1,19 @@
 package com.gulftechinnovations
 
-import com.google.cloud.translate.TranslateOptions
+//import com.google.cloud.translate.TranslateOptions
 import com.gulftechinnovations.data.admin.AdminUserDao
 import com.gulftechinnovations.data.admin.AdminUserDaoImpl
 import com.gulftechinnovations.data.cart.CartDaoImpl
 import com.gulftechinnovations.data.category.CategoryDao
 import com.gulftechinnovations.data.category.CategoryDaoImpl
+import com.gulftechinnovations.data.dine_in.area.DineInAreaDao
+import com.gulftechinnovations.data.dine_in.area.DineInAreaDaoImpl
+import com.gulftechinnovations.data.dine_in.table.DineInTableDao
+import com.gulftechinnovations.data.dine_in.table.DineInTableDaoImpl
 import com.gulftechinnovations.data.multi_product.MultiProductDaoImpl
 import com.gulftechinnovations.data.product.ProductDaoImpl
+import com.gulftechinnovations.data.sample.AbDaoImpl
+import com.gulftechinnovations.data.sample.CdDaoImpl
 import com.gulftechinnovations.data.sub_category.SubCategoryDaoImpl
 import com.gulftechinnovations.data.user.UserDao
 import com.gulftechinnovations.data.user.UserDaoImpl
@@ -20,15 +26,16 @@ import com.gulftechinnovations.plugins.configureSecurity
 import com.gulftechinnovations.plugins.configureSerialization
 import com.gulftechinnovations.service.StudentService
 import com.gulftechinnovations.service.StudentServiceImpl
-import io.ktor.client.*
+/*import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.serialization.kotlinx.json.**/
 import io.ktor.server.application.*
 import kotlinx.coroutines.runBlocking
 
 fun main(args: Array<String>) {
-    io.ktor.server.netty.EngineMain.main(args)
+    //io.ktor.server.netty.EngineMain.main(args)
+    io.ktor.server.tomcat.EngineMain.main(args)
 }
 
 fun Application.module() {
@@ -38,11 +45,11 @@ fun Application.module() {
 
     DatabaseFactory.init(config = environment.config)
 
-    val client = HttpClient(OkHttp) {
+   /* val client = HttpClient(OkHttp) {
         install(ContentNegotiation) {
             json()
         }
-    }
+    }*/
 
     val studentService: StudentService by lazy {
         StudentServiceImpl()
@@ -75,11 +82,27 @@ fun Application.module() {
         CartDaoImpl()
     }
 
+    val dineInAreaDao by lazy {
+        DineInAreaDaoImpl()
+    }
+
+    val dineInTableDao by lazy{
+        DineInTableDaoImpl()
+    }
+
+    val abDao by lazy {
+        AbDaoImpl()
+    }
+
+    val cdDao by lazy{
+        CdDaoImpl()
+    }
+
     configureSerialization()
     configureHTTP()
     configureSecurity()
 
-    val translate =  TranslateOptions.getDefaultInstance().service
+   // val translate =  TranslateOptions.getDefaultInstance().service
 
 
     configureRouting(
@@ -92,9 +115,10 @@ fun Application.module() {
         subCategoryDao = subCategoryDao,
         productDao = productDao,
         multiProductDao = multiProductDao,
-        client = client,
-
-        translate = translate
+        dineInAreaDao = dineInAreaDao,
+        dineInTableDao = dineInTableDao,
+        abDao = abDao,
+        cdDao = cdDao
     )
 
     registerAdminUserAddDefaultCategoryValues(adminUserDao = adminUserDao)
@@ -102,7 +126,7 @@ fun Application.module() {
 
 fun registerAdminUserAddDefaultCategoryValues(adminUserDao: AdminUserDao) {
     runBlocking {
-        val adminUser = adminUserDao.getOneAdminUser(adminPassword = "741")
+        val adminUser = adminUserDao.getOneAdminUserByName(adminName = "admin")
         if (adminUser == null) {
             dbQuery {
                 adminUserDao.insertAdminUser(

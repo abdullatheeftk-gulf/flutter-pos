@@ -2,21 +2,22 @@ package com.gulftechinnovations.routes
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.gulftechinnovations.model.AdminUser
 import com.gulftechinnovations.data.admin.AdminUserDao
-import com.gulftechinnovations.model.AdminPasswordToReset
-import com.gulftechinnovations.model.AdminResponse
+import com.gulftechinnovations.data.user.UserDao
+import com.gulftechinnovations.model.*
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.Serializable
+import kotlinx.coroutines.delay
 import java.util.*
 
 fun Routing.adminRoutes(
     application: Application,
-    adminUserDao: AdminUserDao
+    adminUserDao: AdminUserDao,
+    userDao:UserDao
 ) {
     val jwtAudience = application.environment.config.property("jwt.audience").getString()
     val jwtDomain = application.environment.config.property("jwt.domain").getString()
@@ -32,8 +33,8 @@ fun Routing.adminRoutes(
 
                 println(adminUser)
 
-                val adminUserFromDatabase = adminUserDao.getOneAdminUserByName(adminUser = adminUser)
-                    ?: throw Exception("Admin User is not exist")
+                val adminUserFromDatabase = adminUserDao.getOneAdminUser(adminUser = adminUser)
+                    ?: throw BadRequestException("No Admin User with password ${adminUser.adminPassword}")
 
                 val date = Date()
                 date.time += 15 * 60 * 1000
@@ -54,6 +55,8 @@ fun Routing.adminRoutes(
                 call.respond(status = HttpStatusCode.BadRequest, message = e.message ?: "There have problem on request")
             }
         }
+
+
 
         post("/registerAdminUser") {
             try {
@@ -83,30 +86,60 @@ fun Routing.adminRoutes(
 
         put("/updateAdminUser") {
             try {
-                val adminPasswordToReset = call.receive<AdminPasswordToReset>()
+                val adminUser = call.receive<AdminUser>()
 
-                val newAdminReceived = adminPasswordToReset.newAdminUser
-                val oldAdminReceived = adminPasswordToReset.oldAdminUser
 
-                val oldAdminUser = adminUserDao.getOneAdminUser(adminPassword = oldAdminReceived.adminPassword)
-                    ?: throw Exception("No admin user with this password")
-
-                val newAdminUser = oldAdminUser.copy(
-                    adminId = oldAdminUser.adminId,
-                    adminName = newAdminReceived.adminName,
-                    adminPassword = newAdminReceived.adminPassword,
-                    licenseKey = newAdminReceived.licenseKey,
-                    isLicenceKeyVerified = newAdminReceived.isLicenceKeyVerified
-                )
-
-                adminUserDao.updateAdminUser(adminUser = newAdminUser)
-
+                adminUserDao.updateAdminUser(adminUser = adminUser)
 
                 call.respond("Updated Admin User")
-
-
             } catch (e: Exception) {
                 call.respond(status = HttpStatusCode.BadRequest, message = e.message ?: "There have problem on request")
+            }
+        }
+
+        post("/addUser") {
+            try {
+                val user = call.receive<User>()
+                val userId = userDao.insertUser(user = user)
+                delay(3000)
+                call.respond(userId)
+            } catch (e: Exception) {
+                call.respond(status = HttpStatusCode.BadRequest, message = e.message ?: "There have problem on request")
+            }
+        }
+
+        get("/getAllUsers") {
+            try {
+                val userList = userDao.getAllUsers()
+                call.respond(userList)
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.ExpectationFailed, e.message ?: "There have some problem")
+            }
+        }
+
+        put("/updateUser/{oldPassword}") {
+            try {
+                val oldPassword = call.parameters["oldPassword"]?: throw  Exception("Invalid old password")
+                val userToUpdate = call.receive<User>()
+                val result = userDao.updateUser(
+                    oldPassword = oldPassword,
+                    newUser = userToUpdate
+                )
+                delay(3000)
+                call.respond(status = HttpStatusCode.OK, result)
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.BadRequest, e.message ?: "There have some problem")
+            }
+        }
+
+        delete("/deleteOneUser/{userPassword}") {
+            try {
+                val userPassword = call.parameters["userPassword"] ?: throw Exception("Invalid user id parameters")
+                userDao.deleteUser(userPassword = userPassword)
+                delay(3000)
+                call.respond("Deleted")
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.BadRequest, e.message ?: "There have some problem")
             }
         }
     }

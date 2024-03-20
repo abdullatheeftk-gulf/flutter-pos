@@ -1,19 +1,19 @@
 package com.gulftechinnovations.routes
 
-import com.google.cloud.storage.*
+//import com.google.cloud.storage.*
 import com.gulftechinnovations.model.Student
 import com.gulftechinnovations.service.StudentService
 import io.ktor.http.*
-import io.ktor.http.content.*
+//import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.withContext
+/*import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.io.InputStream
-import kotlin.coroutines.coroutineContext
+import kotlin.coroutines.coroutineContext*/
 
 fun Routing.studentRoutes(
     studentService: StudentService,
@@ -45,7 +45,7 @@ fun Routing.studentRoutes(
             }
         }
 
-        post("/uploadAnImage") {
+        /*post("/uploadAnImage") {
             try {
 
                 var fileName: String
@@ -75,9 +75,9 @@ fun Routing.studentRoutes(
             } catch (e: Exception) {
                 call.respond(status = HttpStatusCode.BadRequest, e.message ?: "There have some problem")
             }
-        }
+        }*/
 
-        post ("/uploadImage"){
+      /*  post ("/uploadImage"){
             try {
                 var fileName: String
                 val multipartDart = call.receiveMultipart()
@@ -106,11 +106,11 @@ fun Routing.studentRoutes(
             }catch (e: Exception) {
                 call.respond(status = HttpStatusCode.BadRequest, e.message ?: "There have some problem")
             }
-        }
+        }*/
 
 
 
-        get("/downloadAnImage/{filename}") {
+        /*get("/downloadAnImage/{filename}") {
             try {
                 val fileName = call.parameters["filename"] ?: throw Exception("File name is empty")
                 val result = downloadObjectAsBytes(
@@ -142,13 +142,13 @@ fun Routing.studentRoutes(
             } catch (e: Exception) {
                 call.respond(status = HttpStatusCode.BadRequest, e.message ?: "There have some problem")
             }
-        }
+        }*/
 
     }
 }
 
 
-@Throws(IOException::class)
+/*@Throws(IOException::class)
 suspend fun uploadAnObjectToGoogleCloudStorageAsInputStream(
     projectId: String,
     bucketName: String,
@@ -174,9 +174,9 @@ suspend fun uploadAnObjectToGoogleCloudStorageAsInputStream(
         blob.blobId.toGsUtilUri()
     }
 
-}
+}*/
 
-@Throws(IOException::class)
+/*@Throws(IOException::class)
 suspend fun uploadAnObjectToGoogleCloudStorageAsByteArray(
     projectId: String,
     bucketName: String,
@@ -204,9 +204,9 @@ suspend fun uploadAnObjectToGoogleCloudStorageAsByteArray(
         blob.name
     }
 
-}
+}*/
 
-suspend fun deleteAnImage(
+/*suspend fun deleteAnImage(
     projectId: String,
     bucketName: String,
     objectName: String,
@@ -221,8 +221,9 @@ suspend fun deleteAnImage(
 
         "Deleted $objectName"
     }
-}
+}*/
 
+/*
 @Throws(IOException::class)
 suspend fun downloadObjectAsBytes(
     projectId: String,
@@ -235,4 +236,4 @@ suspend fun downloadObjectAsBytes(
         storage.readAllBytes(bucketName, objectName)
 
     }
-}
+}*/

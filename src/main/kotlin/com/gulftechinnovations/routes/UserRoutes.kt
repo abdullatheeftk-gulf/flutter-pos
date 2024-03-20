@@ -89,14 +89,7 @@ fun Routing.userRoutes(
             }
         }
 
-        get("/getAllUsers") {
-            try {
-                val userList = userDao.getAllUsers()
-                call.respond(userList)
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.ExpectationFailed, e.message ?: "There have some problem")
-            }
-        }
+
 
         get("/getOneUserByPassword/{userPassword}") {
             try {
@@ -110,28 +103,7 @@ fun Routing.userRoutes(
 
         }
 
-        put("/updateUser") {
-            try {
-                val userToUpdate = call.receive<UserToUpdate>()
-                userDao.updateUser(
-                    oldPassword = userToUpdate.oldUserPassword,
-                    newPassword = userToUpdate.newUserPassword
-                )
-                call.respond(status = HttpStatusCode.OK, "Updated")
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.BadRequest, e.message ?: "There have some problem")
-            }
-        }
 
-        delete("/deleteOneUser/{userPassword}") {
-            try {
-                val userPassword = call.parameters["userPassword"] ?: throw Exception("Invalid user id parameters")
-                userDao.deleteUser(userPassword = userPassword)
-                call.respond("Deleted")
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.BadRequest, e.message ?: "There have some problem")
-            }
-        }
     }
 //}
 

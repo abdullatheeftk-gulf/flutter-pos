@@ -14,16 +14,22 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.21"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("com.google.cloud.tools.appengine") version "2.4.2"
+    id("org.gretty") version "4.0.3"
+    id("war")
 }
 
 group = "com.gulftechinnovations"
 version = "0.0.1"
 
 application {
-    mainClass.set("io.ktor.server.netty.EngineMain")
+    //Disable for tomcat
+    //mainClass.set("io.ktor.server.netty.EngineMain")
+    mainClass.set("io.ktor.server.tomcat.EngineMain")
 
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+
+
 }
 
 configure<AppEngineAppYamlExtension> {
@@ -36,6 +42,13 @@ configure<AppEngineAppYamlExtension> {
     }
 }
 
+// only for tomcat
+gretty {
+    servletContainer = "tomcat10"
+    contextPath = "/"
+    logbackConfigFile = "src/main/resources/logback.xml"
+}
+
 repositories {
     mavenCentral()
     maven {
@@ -45,6 +58,7 @@ repositories {
 }
 
 dependencies {
+
     implementation("io.ktor:ktor-server-content-negotiation-jvm")
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
@@ -52,7 +66,10 @@ dependencies {
     implementation("io.ktor:ktor-server-host-common-jvm")
     implementation("io.ktor:ktor-server-auth-jvm")
     implementation("io.ktor:ktor-server-auth-jwt-jvm")
-    implementation("io.ktor:ktor-server-netty-jvm")
+
+    //Disable for tomcat integration
+    //implementation("io.ktor:ktor-server-netty-jvm")
+
     implementation("ch.qos.logback:logback-classic:$logback_version")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
@@ -62,40 +79,62 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
 
+    // h2
+    //implementation("com.h2database:h2:2.2.224")
+
     //mysql
-    implementation("mysql:mysql-connector-java:$mysql_version")
+   // implementation("mysql:mysql-connector-java:$mysql_version")
 
     // postgres
     implementation("org.postgresql:postgresql:$postgres_version")
 
     // for gcloud mysql
-    implementation("com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.13.1")
+   // implementation("com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.13.1")
 
     // Cloud storage
-    implementation("com.google.cloud:google-cloud-storage:2.26.1")
+    //implementation("com.google.cloud:google-cloud-storage:2.26.1")
 
     // ktor Client version
-    implementation("io.ktor:ktor-client-core:$ktor_version")
+    /*implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-okhttp:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
-
+*/
     // Sql server
-    implementation("com.microsoft.sqlserver:mssql-jdbc:12.4.2.jre11")
+    //implementation("com.microsoft.sqlserver:mssql-jdbc:12.6.0.jre11")
 
 
     // Translation
-    implementation ("net.clojars.suuft:libretranslate-java:1.0.5")
+    //implementation ("net.clojars.suuft:libretranslate-java:1.0.5")
 
     // Detect language
-    implementation("com.detectlanguage:detectlanguage:1.1.0")
+    //implementation("com.detectlanguage:detectlanguage:1.1.0")
 
     // DeepL Translation
-    implementation("com.deepl.api:deepl-java:1.4.0")
+   // implementation("com.deepl.api:deepl-java:1.4.0")
 
     // Log4J
-    implementation("org.apache.logging.log4j:log4j-api-kotlin:1.4.0")
+    //implementation("org.apache.logging.log4j:log4j-api-kotlin:1.4.0")
 
     // Google cloud translation
-    implementation("com.google.cloud:google-cloud-translate:2.33.0")
+   // implementation("com.google.cloud:google-cloud-translate:2.33.0")
+
+    // for war
+    implementation("io.ktor:ktor-server-servlet-jakarta:$ktor_version")
+
+    // for tomcat
+    implementation("io.ktor:ktor-server-tomcat-jvm")
+
+    // Flyway dependencies
+    implementation("org.flywaydb:flyway-core:10.7.2")
+    implementation("org.flywaydb:flyway-database-postgresql:10.7.2")
+
+
+
+}
+// only for tomcat
+afterEvaluate {
+    tasks.getByName("run") {
+        dependsOn("appRun")
+    }
 }
